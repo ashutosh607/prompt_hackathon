@@ -2,6 +2,7 @@ import { useState } from "react";
 import { X, Play, FileText, CheckCircle2, ChevronRight, Sparkles, Award } from "lucide-react";
 import { Button } from "./ui/button";
 import StudyMatchAITutor from "./StudyMatchAITutor";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function ResourceViewerModal({
   isOpen,
@@ -159,26 +160,37 @@ export default function ResourceViewerModal({
   const current = steps[activeStep] || steps[0];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-      <div className="relative w-full max-w-6xl w-[96vw] h-[92vh] bg-[#FDFEFC] border border-[#E5ECE3] rounded-3xl shadow-2xl overflow-hidden text-[#1B3828] flex flex-col">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm"
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.94, y: 18, filter: "blur(6px)" }}
+        animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
+        exit={{ opacity: 0, scale: 0.94, y: 18, filter: "blur(6px)" }}
+        transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+        className="relative w-[96vw] max-w-6xl h-[92vh] bg-[#FDFEFC] border border-[#E5ECE3] rounded-3xl shadow-2xl overflow-hidden text-[#1B3828] flex flex-col min-w-0"
+      >
         {/* Top Header Bar */}
-        <div className="flex items-center justify-between px-6 py-3.5 border-b border-[#E5ECE3] bg-white/90 shrink-0">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-[#EAF3E8] border border-[#D2E4CE] text-[#204930]">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-[#E5ECE3] bg-white/90 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-[#EAF3E8] border border-[#D2E4CE] text-[#204930] shrink-0">
               <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
               {topic}
             </span>
-            <div>
-              <h3 className="text-sm sm:text-base font-bold text-[#1B3828] leading-tight">
+            <div className="min-w-0">
+              <h3 className="text-xs sm:text-base font-bold text-[#1B3828] leading-tight truncate">
                 {current.title}
               </h3>
-              <p className="text-[11px] text-stone-500">
+              <p className="text-[10px] sm:text-[11px] text-stone-500">
                 Step {activeStep + 1} of {steps.length} • {current.duration}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={onClose}
               className="p-2 text-stone-400 hover:text-stone-700 rounded-full hover:bg-stone-100 transition cursor-pointer"
@@ -189,10 +201,10 @@ export default function ResourceViewerModal({
         </div>
 
         {/* Split View: Left (Learning Resource) + Right (StudyMatch AI Tutor) */}
-        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-w-0">
           {/* LEFT: Video / Notes / Practice Resource */}
-          <div className="flex-1 flex flex-col p-4 sm:p-6 overflow-y-auto bg-[#FAFCF9]">
-            <div className="flex-1">{current.content}</div>
+          <div className="flex-1 flex flex-col p-4 sm:p-6 overflow-y-auto bg-[#FAFCF9] min-w-0">
+            <div className="flex-1 min-w-0">{current.content}</div>
 
             {/* In-Resource Step Controls */}
             <div className="pt-4 mt-6 border-t border-[#E5ECE3] flex items-center justify-between shrink-0">
@@ -208,8 +220,12 @@ export default function ResourceViewerModal({
                 {steps.map((_, idx) => (
                   <div
                     key={idx}
-                    className={`w-2.5 h-2.5 rounded-full transition ${
-                      idx === activeStep ? "bg-[#1B3828] scale-110" : "bg-stone-200"
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      idx === activeStep
+                        ? "w-6 bg-[#1B3828]"
+                        : idx < activeStep
+                        ? "w-2 bg-emerald-500"
+                        : "w-2 bg-stone-200"
                     }`}
                   />
                 ))}
@@ -232,7 +248,7 @@ export default function ResourceViewerModal({
           </div>
 
           {/* RIGHT: StudyMatch AI Tutor Companion Sidebar */}
-          <div className="w-full lg:w-[380px] xl:w-[420px] shrink-0 border-t lg:border-t-0 lg:border-l border-[#E2EBE0] flex flex-col h-[320px] lg:h-full bg-[#FAFBF9]">
+          <div className="w-full lg:w-[380px] xl:w-[420px] shrink-0 border-t lg:border-t-0 lg:border-l border-[#E2EBE0] flex flex-col h-[320px] lg:h-full bg-[#FAFBF9] min-w-0">
             <StudyMatchAITutor
               topic={topic}
               resource={{
@@ -246,7 +262,7 @@ export default function ResourceViewerModal({
             />
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

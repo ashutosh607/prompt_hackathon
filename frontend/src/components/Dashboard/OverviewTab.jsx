@@ -17,6 +17,8 @@ import {
   Check,
 } from "lucide-react";
 import { Button } from "../ui/button";
+import { motion } from "framer-motion";
+import { BlurText } from "../MotionEffects";
 
 export default function OverviewTab({
   profile,
@@ -58,47 +60,56 @@ export default function OverviewTab({
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in">
+    <div className="space-y-6 sm:space-y-8 min-w-0">
       {/* 1. Greeting & Subtitle (Section 9) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-[#162F22] tracking-tight">
-            Good evening, {studentName} 👋
-          </h2>
-          <p className="text-xs sm:text-sm text-stone-500 mt-1">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 min-w-0">
+        <div className="min-w-0">
+          <BlurText
+            text={`Good evening, ${studentName} 👋`}
+            as="h2"
+            className="text-2xl sm:text-3xl font-bold text-[#162F22] tracking-tight break-words"
+            delay={0.05}
+          />
+          <p className="text-xs sm:text-sm text-stone-500 mt-1 break-words">
             Continue building your {domainName} skills based on your adaptive diagnostic.
           </p>
         </div>
 
-        <Button
-          onClick={() => onStartResource(resources[0])}
-          className="bg-[#1B3828] hover:bg-[#122A1E] text-white px-6 py-2.5 rounded-full text-xs font-semibold shadow-md transition cursor-pointer self-start sm:self-auto flex items-center gap-2"
-        >
-          Continue Learning →
-        </Button>
+        <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="shrink-0">
+          <Button
+            onClick={() => onStartResource(resources[0])}
+            className="bg-[#1B3828] hover:bg-[#122A1E] text-white px-5 sm:px-6 py-2.5 rounded-full text-xs font-semibold shadow-md transition cursor-pointer self-start sm:self-auto flex items-center gap-2"
+          >
+            Continue Learning →
+          </Button>
+        </motion.div>
       </div>
 
       {/* 2. Four Stats Cards (Section 9) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat) => {
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {stats.map((stat, idx) => {
           const Icon = stat.icon;
           return (
-            <div
+            <motion.div
               key={stat.label}
-              className="p-5 bg-white rounded-3xl border border-[#E3ECE0] shadow-sm flex items-center justify-between"
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.06, duration: 0.35 }}
+              whileHover={{ y: -3 }}
+              className="p-4 sm:p-5 bg-white rounded-3xl border border-[#E3ECE0] shadow-sm flex items-center justify-between min-w-0"
             >
-              <div>
-                <span className="text-[11px] font-semibold text-stone-400 uppercase tracking-wider block">
+              <div className="min-w-0">
+                <span className="text-[10px] sm:text-[11px] font-semibold text-stone-400 uppercase tracking-wider block truncate">
                   {stat.label}
                 </span>
-                <span className="text-xl sm:text-2xl font-black text-[#1B3828] font-mono mt-0.5 block">
+                <span className="text-lg sm:text-2xl font-black text-[#1B3828] font-mono mt-0.5 block truncate">
                   {stat.value}
                 </span>
               </div>
-              <div className="w-10 h-10 rounded-2xl bg-[#EAF3E8] text-[#245435] flex items-center justify-center">
-                <Icon className="w-5 h-5" />
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-[#EAF3E8] text-[#245435] flex items-center justify-center shrink-0 ml-2">
+                <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>
@@ -194,22 +205,26 @@ export default function OverviewTab({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {resources.slice(0, 4).map((res) => {
+          {resources.slice(0, 4).map((res, i) => {
             const isSaved = savedResourceIds.includes(res.id);
             return (
-              <div
+              <motion.div
                 key={res.id}
-                className="bg-white rounded-3xl border border-[#E3ECE0] p-5 shadow-sm hover:border-[#2C573C] transition-all flex flex-col justify-between space-y-4 group"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + i * 0.07, duration: 0.35 }}
+                whileHover={{ y: -4 }}
+                className="bg-white rounded-3xl border border-[#E3ECE0] p-5 shadow-sm hover:border-[#2C573C] transition-colors flex flex-col justify-between space-y-4 group min-w-0"
               >
-                <div className="space-y-3">
+                <div className="space-y-3 min-w-0">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-[#245435] bg-[#EAF3E8] px-2.5 py-0.5 rounded-full border border-[#D1E4CD]">
+                    <span className="text-xs font-bold text-[#245435] bg-[#EAF3E8] px-2.5 py-0.5 rounded-full border border-[#D1E4CD] shrink-0">
                       {res.matchPercentage}% MATCH
                     </span>
 
                     <button
                       onClick={() => onToggleSaveResource(res.id)}
-                      className={`p-1.5 rounded-full transition cursor-pointer ${
+                      className={`p-1.5 rounded-full transition cursor-pointer shrink-0 ${
                         isSaved ? "text-emerald-700" : "text-stone-300 hover:text-stone-600"
                       }`}
                       title={isSaved ? "Saved" : "Save resource"}
@@ -218,23 +233,23 @@ export default function OverviewTab({
                     </button>
                   </div>
 
-                  <div>
-                    <h4 className="text-sm font-bold text-[#162F22] leading-snug group-hover:text-emerald-900 transition">
+                  <div className="min-w-0">
+                    <h4 className="text-sm font-bold text-[#162F22] leading-snug group-hover:text-emerald-900 transition break-words">
                       {res.title}
                     </h4>
-                    <p className="text-xs text-stone-500 mt-1 leading-relaxed line-clamp-2">
+                    <p className="text-xs text-stone-500 mt-1 leading-relaxed line-clamp-2 break-words">
                       {res.reasonSnippet}
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2 text-[11px] text-stone-400 font-medium">
+                  <div className="flex items-center gap-2 text-[11px] text-stone-400 font-medium flex-wrap">
                     <span>{res.type}</span>
                     <span>•</span>
                     <span>{res.duration}</span>
                     <span>•</span>
                     <span>{res.difficulty}</span>
                     <span>•</span>
-                    <span className="text-stone-600">{res.source}</span>
+                    <span className="text-stone-600 truncate max-w-[120px]">{res.source}</span>
                   </div>
                 </div>
 
@@ -254,7 +269,7 @@ export default function OverviewTab({
                     Start →
                   </Button>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>

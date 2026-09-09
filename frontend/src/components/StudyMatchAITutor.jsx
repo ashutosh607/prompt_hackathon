@@ -280,13 +280,13 @@ export default function StudyMatchAITutor({
       </div>
 
       {/* Messages Scroll Area */}
-      <div className="flex-1 p-3.5 space-y-3 overflow-y-auto">
+      <div className="flex-1 p-3.5 space-y-3 overflow-y-auto min-w-0">
         {messages.map((msg) => {
           if (msg.sender === "student") {
             return (
               <div key={msg.id} className="flex justify-end">
-                <div className="max-w-[85%] bg-[#1B3828] text-white p-3 rounded-2xl rounded-tr-sm text-xs shadow-sm space-y-1">
-                  <p className="leading-relaxed">{msg.text}</p>
+                <div className="max-w-[85%] bg-[#1B3828] text-white p-3 rounded-2xl rounded-tr-sm text-xs shadow-sm space-y-1 break-words min-w-0">
+                  <p className="leading-relaxed break-words [overflow-wrap:anywhere]">{msg.text}</p>
                   <span className="text-[9px] text-emerald-300 block text-right">
                     {msg.timestamp}
                   </span>
@@ -298,15 +298,15 @@ export default function StudyMatchAITutor({
           if (msg.sender === "teacher") {
             return (
               <div key={msg.id} className="flex justify-start">
-                <div className="max-w-[90%] bg-gradient-to-br from-[#EEF7EC] to-[#E5F2E3] border border-[#CDE3CB] p-3.5 rounded-2xl rounded-tl-sm text-xs shadow-sm space-y-2 text-[#1B3828]">
+                <div className="max-w-[90%] bg-gradient-to-br from-[#EEF7EC] to-[#E5F2E3] border border-[#CDE3CB] p-3.5 rounded-2xl rounded-tl-sm text-xs shadow-sm space-y-2 text-[#1B3828] break-words min-w-0">
                   <div className="flex items-center gap-1.5 pb-1 border-b border-[#D4EAD2] text-emerald-900">
-                    <GraduationCap className="w-4 h-4 text-emerald-700" />
-                    <span className="font-bold text-[11px]">{msg.teacherName} (Teacher)</span>
-                    <span className="text-[10px] text-stone-500 ml-auto">{msg.timestamp}</span>
+                    <GraduationCap className="w-4 h-4 text-emerald-700 shrink-0" />
+                    <span className="font-bold text-[11px] truncate">{msg.teacherName} (Teacher)</span>
+                    <span className="text-[10px] text-stone-500 ml-auto shrink-0">{msg.timestamp}</span>
                   </div>
-                  <p className="leading-relaxed font-medium">{msg.text}</p>
+                  <p className="leading-relaxed font-medium break-words [overflow-wrap:anywhere]">{msg.text}</p>
                   <div className="inline-flex items-center gap-1 text-[10px] text-emerald-800 font-semibold pt-1">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                    <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
                     Direct teacher clarification received
                   </div>
                 </div>
@@ -430,23 +430,23 @@ export default function StudyMatchAITutor({
           // Default AI Tutor Message
           return (
             <div key={msg.id} className="flex justify-start">
-              <div className="max-w-[88%] bg-white border border-[#E3ECE0] p-3 rounded-2xl rounded-tl-sm text-xs shadow-sm space-y-2 text-stone-800">
+              <div className="max-w-[88%] bg-white border border-[#E3ECE0] p-3 rounded-2xl rounded-tl-sm text-xs shadow-sm space-y-2 text-stone-800 break-words min-w-0">
                 <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#1B3828]">
-                  <Compass className="w-3.5 h-3.5 text-emerald-600" />
+                  <Compass className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                   <span>StudyMatch AI</span>
                   {msg.confidence && (
-                    <span className="ml-auto text-[9px] text-stone-400 font-normal">
+                    <span className="ml-auto text-[9px] text-stone-400 font-normal shrink-0">
                       Match Confidence: {Math.round(msg.confidence * 100)}%
                     </span>
                   )}
                 </div>
 
-                <p className="leading-relaxed whitespace-pre-line text-stone-700">{msg.text}</p>
+                <p className="leading-relaxed whitespace-pre-line text-stone-700 break-words [overflow-wrap:anywhere]">{msg.text}</p>
 
                 {msg.mlContext && msg.mlContext.predicted_action && (
-                  <div className="p-2 rounded-xl bg-[#F4F9F2] border border-[#E0EDE0] text-[10px] text-[#224A2E] flex items-start gap-1.5">
+                  <div className="p-2 rounded-xl bg-[#F4F9F2] border border-[#E0EDE0] text-[10px] text-[#224A2E] flex items-start gap-1.5 break-words min-w-0">
                     <Sparkles className="w-3 h-3 text-emerald-600 shrink-0 mt-0.5" />
-                    <span>
+                    <span className="break-words min-w-0 flex-1">
                       <strong>ML Suggestion ({msg.mlContext.predicted_action})</strong>:{" "}
                       {msg.mlContext.guidance || "Tailored to your learning style."}
                     </span>

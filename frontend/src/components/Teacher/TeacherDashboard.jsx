@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { socket } from "../../lib/socket";
+import { motion, AnimatePresence } from "framer-motion";
+import { BlurText } from "../MotionEffects";
 
 export default function TeacherDashboard({ onBackToStudent }) {
   const [doubts, setDoubts] = useState([]);
@@ -92,47 +94,47 @@ export default function TeacherDashboard({ onBackToStudent }) {
   return (
     <div className="min-h-screen bg-[#F9FAF7] text-[#1B3828]">
       {/* Top Teacher Navigation */}
-      <header className="h-16 px-6 sm:px-10 border-b border-[#E2EAE0] bg-white/80 backdrop-blur-md sticky top-0 z-30 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-[#1B3828] text-emerald-300 flex items-center justify-center font-bold text-sm shadow-sm">
+      <header className="h-16 px-4 sm:px-10 border-b border-[#E2EAE0] bg-white/80 backdrop-blur-md sticky top-0 z-30 flex items-center justify-between">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="w-9 h-9 rounded-full bg-[#1B3828] text-emerald-300 flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
             <GraduationCap className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-sm sm:text-base font-bold text-[#1B3828]">
-                StudyMatch Teacher Portal
+              <h1 className="text-xs sm:text-base font-bold text-[#1B3828]">
+                Teacher Portal
               </h1>
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#EAF3E8] border border-[#D0E3CD] text-[#224A2E]">
-                ● Live Real-Time
+                ● Live
               </span>
             </div>
-            <p className="text-[11px] text-stone-500">
+            <p className="text-[10px] sm:text-[11px] text-stone-500 hidden sm:block">
               Escalation Queue & AI-Assisted Intervention
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <Button
             onClick={fetchDoubts}
             variant="outline"
-            className="rounded-full px-3 py-1.5 text-xs text-stone-600 border-[#D8E3D5] hover:bg-[#F2F6F1] flex items-center gap-1.5 cursor-pointer"
+            className="rounded-full px-2.5 sm:px-3 py-1.5 text-xs text-stone-600 border-[#D8E3D5] hover:bg-[#F2F6F1] flex items-center gap-1.5 cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-            Refresh
+            <span className="hidden sm:inline">Refresh</span>
           </Button>
 
           <Button
             onClick={onBackToStudent}
-            className="bg-[#1B3828] hover:bg-[#132A1D] text-white rounded-full px-4 py-1.5 text-xs font-semibold cursor-pointer shadow-sm"
+            className="bg-[#1B3828] hover:bg-[#132A1D] text-white rounded-full px-3 sm:px-4 py-1.5 text-xs font-semibold cursor-pointer shadow-sm shrink-0"
           >
-            ← Back to Student View
+            ← <span className="hidden sm:inline">Back to</span> Student
           </Button>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto p-6 sm:p-8 space-y-8">
+      <main className="max-w-6xl mx-auto p-4 sm:p-8 space-y-6 sm:space-y-8 min-w-0">
         {/* Banner Alert if pending doubts exist */}
         {pendingDoubts.length > 0 ? (
           <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex items-center justify-between shadow-2xs">
@@ -141,11 +143,11 @@ export default function TeacherDashboard({ onBackToStudent }) {
                 <AlertCircle className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-xs sm:text-sm font-bold">
-                  {pendingDoubts.length} student {pendingDoubts.length === 1 ? "doubt requires" : "doubts require"} your attention
-                </h3>
+                <span className="font-bold text-xs sm:text-sm">
+                  {pendingDoubts.length} Student Doubt{pendingDoubts.length > 1 ? "s" : ""} Escalated
+                </span>
                 <p className="text-[11px] text-amber-800">
-                  The StudyMatch AI identified high-ambiguity or personalized questions and escalated them to avoid student confusion.
+                  Faculty intervention requested by StudyMatch AI & ML Confidence Engine.
                 </p>
               </div>
             </div>
@@ -180,13 +182,16 @@ export default function TeacherDashboard({ onBackToStudent }) {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {pendingDoubts.map((doubt) => (
-                <div
+              {pendingDoubts.map((doubt, idx) => (
+                <motion.div
                   key={doubt.id}
-                  className="bg-white border-2 border-amber-200 rounded-3xl p-5 shadow-sm hover:shadow-md transition space-y-3 relative overflow-hidden"
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35, delay: idx * 0.08 }}
+                  className="bg-white border-2 border-amber-200 rounded-3xl p-5 shadow-sm hover:shadow-md transition space-y-3 relative overflow-hidden min-w-0"
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-200 uppercase tracking-wide">
                         <Clock className="w-2.5 h-2.5" /> New Doubt
                       </span>
@@ -200,52 +205,52 @@ export default function TeacherDashboard({ onBackToStudent }) {
                         </span>
                       )}
                     </div>
-                    <span className="text-[11px] text-stone-500 font-medium">
+                    <span className="text-[11px] text-stone-500 font-medium shrink-0">
                       {doubt.topic}
                     </span>
                   </div>
 
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-[#EBF4E9] text-[#1B3828] font-bold text-xs flex items-center justify-center border border-[#D5E5D3]">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="w-6 h-6 rounded-full bg-[#EBF4E9] text-[#1B3828] font-bold text-xs flex items-center justify-center border border-[#D5E5D3] shrink-0">
                         {doubt.studentAvatar || doubt.studentName.charAt(0)}
                       </div>
                       <span className="text-xs font-bold text-stone-900">
                         {doubt.studentName}
                       </span>
-                      <span className="text-[11px] text-stone-400">• in {doubt.resourceTitle}</span>
+                      <span className="text-[11px] text-stone-400 truncate max-w-[180px]">• in {doubt.resourceTitle}</span>
                     </div>
                   </div>
 
-                  {/* Question Box */}
-                  <div className="p-3 bg-[#FCFDFB] border border-[#E5EFE2] rounded-2xl">
+                  {/* Question Box with Word Break Prevention */}
+                  <div className="p-3 bg-[#FCFDFB] border border-[#E5EFE2] rounded-2xl min-w-0">
                     <span className="text-[10px] font-bold text-stone-400 block mb-1">
                       STUDENT QUESTION:
                     </span>
-                    <p className="text-xs font-semibold text-[#1B3828] italic">
+                    <p className="text-xs font-semibold text-[#1B3828] italic break-words [overflow-wrap:anywhere] leading-relaxed">
                       &quot;{doubt.question}&quot;
                     </p>
                   </div>
 
                   {/* AI & ML Context */}
                   <div className="grid grid-cols-2 gap-2 text-[11px]">
-                    <div className="p-2 bg-[#FAFBF9] rounded-xl border border-stone-200">
+                    <div className="p-2 bg-[#FAFBF9] rounded-xl border border-stone-200 min-w-0">
                       <span className="text-stone-400 block text-[10px]">AI Confidence:</span>
                       <span className="font-bold text-amber-800">
                         {Math.round((doubt.aiConfidence || 0.41) * 100)}%
                       </span>
                     </div>
 
-                    <div className="p-2 bg-[#FAFBF9] rounded-xl border border-stone-200">
+                    <div className="p-2 bg-[#FAFBF9] rounded-xl border border-stone-200 min-w-0">
                       <span className="text-stone-400 block text-[10px]">ML Action:</span>
-                      <span className="font-bold text-emerald-800">
+                      <span className="font-bold text-emerald-800 truncate block">
                         {doubt.mlContext?.predictedAction || "Build Concept"}
                       </span>
                     </div>
                   </div>
 
                   {/* Reason for Escalation */}
-                  <div className="text-[11px] text-[#7A6122] bg-amber-50/70 p-2.5 rounded-xl border border-amber-100">
+                  <div className="text-[11px] text-[#7A6122] bg-amber-50/70 p-2.5 rounded-xl border border-amber-100 break-words leading-relaxed">
                     <strong>Reason:</strong> {doubt.escalationReason || "Requires teacher personalization."}
                   </div>
 
@@ -258,7 +263,7 @@ export default function TeacherDashboard({ onBackToStudent }) {
                   >
                     Review Doubt & Respond →
                   </Button>
-                </div>
+                </motion.div>
               ))}
             </div>
           )}
