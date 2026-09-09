@@ -17,9 +17,12 @@ if (supabaseUrl && supabaseUrl.includes("supabase.com/dashboard")) {
   );
 }
 
+const validUrl = supabaseUrl && supabaseUrl.startsWith("http") ? supabaseUrl : "https://shqdkeoboannuyxprwqv.supabase.co";
+const validKey = supabaseAnonKey || "sb_publishable_placeholder";
+
 export const supabase = createClient(
-  supabaseUrl || "",
-  supabaseAnonKey || "",
+  validUrl,
+  validKey,
   {
     auth: {
       persistSession: true,
