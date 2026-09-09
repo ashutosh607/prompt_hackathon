@@ -14,6 +14,8 @@ import SavedTab from "./components/Dashboard/SavedTab";
 import WhyThisModal from "./components/Dashboard/WhyThisModal";
 import FeedbackModal from "./components/Dashboard/FeedbackModal";
 import ResourceViewerModal from "./components/ResourceViewerModal";
+import TeacherDashboard from "./components/Teacher/TeacherDashboard";
+import { socket } from "./lib/socket";
 import {
   DEFAULT_LEARNER_PROFILE,
   RECOMMENDED_RESOURCES,
@@ -26,12 +28,14 @@ import {
   Menu,
   Sparkles,
   ChevronLeft,
+  GraduationCap,
 } from "lucide-react";
 import { Button } from "./components/ui/button";
 
 export default function App() {
-  // Application Stage: 'landing' | 'onboarding' | 'quiz' | 'analysis' | 'dashboard'
+  // Application Stage: 'landing' | 'onboarding' | 'quiz' | 'analysis' | 'dashboard' | 'teacher'
   const [appStage, setAppStage] = useState("landing");
+  const [pendingDoubtsCount, setPendingDoubtsCount] = useState(1);
 
   // Dashboard Active Tab
   const [dashboardTab, setDashboardTab] = useState("overview");
@@ -104,6 +108,31 @@ export default function App() {
 
     setResources(updated);
   }, [profile, feedbackHistory]);
+
+  // Real-time doubt escalation sync
+  useEffect(() => {
+    const fetchPendingCount = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/doubts/pending");
+        const data = await res.json();
+        if (data.success) {
+          setPendingDoubtsCount(data.count || 0);
+        }
+      } catch {}
+    };
+    fetchPendingCount();
+
+    const onEscalate = () => setPendingDoubtsCount((c) => c + 1);
+    const onResolve = () => setPendingDoubtsCount((c) => Math.max(0, c - 1));
+
+    socket.on("doubt:escalated", onEscalate);
+    socket.on("teacher:response", onResolve);
+
+    return () => {
+      socket.off("doubt:escalated", onEscalate);
+      socket.off("teacher:response", onResolve);
+    };
+  }, []);
 
   // 1. Onboarding Completed Handler
   const handleOnboardingComplete = (onboardingData) => {
@@ -200,6 +229,18 @@ export default function App() {
                 className="text-xs font-semibold text-stone-500 hover:text-stone-900 transition cursor-pointer hidden sm:inline-block"
               >
                 Dashboard Demo
+              </button>
+              <button
+                onClick={() => setAppStage("teacher")}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#EAF3E8] border border-[#D0E3CD] text-[#1B3828] hover:bg-[#DEEDE0] transition cursor-pointer shadow-2xs"
+              >
+                <GraduationCap className="w-3.5 h-3.5 text-emerald-700" />
+                <span>Teacher Portal</span>
+                {pendingDoubtsCount > 0 && (
+                  <span className="w-4 h-4 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center">
+                    {pendingDoubtsCount}
+                  </span>
+                )}
               </button>
 
               <button
@@ -343,6 +384,8 @@ export default function App() {
             onOpenAuth={() => setAuthModalOpen(true)}
             mobileOpen={mobileSidebarOpen}
             onCloseMobile={() => setMobileSidebarOpen(false)}
+            onOpenTeacherPortal={() => setAppStage("teacher")}
+            pendingDoubtsCount={pendingDoubtsCount}
           />
 
           {/* Main Dashboard Panel */}
@@ -367,6 +410,19 @@ export default function App() {
               </div>
 
               <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setAppStage("teacher")}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#EAF3E8] border border-[#D0E3CD] text-[#1B3828] hover:bg-[#DEEDE0] transition cursor-pointer shadow-2xs"
+                >
+                  <GraduationCap className="w-3.5 h-3.5 text-emerald-700" />
+                  <span className="hidden sm:inline">Teacher Portal</span>
+                  {pendingDoubtsCount > 0 && (
+                    <span className="w-4 h-4 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center">
+                      {pendingDoubtsCount}
+                    </span>
+                  )}
+                </button>
+
                 <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EAF3E8] border border-[#D2E4CE] text-[#245435] text-xs font-semibold">
                   <Sparkles className="w-3.5 h-3.5" />
                   {profile.domain}: {profile.topic}
@@ -436,6 +492,13 @@ export default function App() {
         </div>
       )}
 
+      {/* ========================================================================= */}
+      {/* 6. TEACHER DASHBOARD PORTAL */}
+      {/* ========================================================================= */}
+      {appStage === "teacher" && (
+        <TeacherDashboard onBackToStudent={() => setAppStage("dashboard")} />
+      )}
+
       {/* Global Modals */}
       {/* 1. Supabase Authentication Modal */}
       <AuthModal
@@ -460,12 +523,17 @@ export default function App() {
         onClose={() => setSelectedWhyThisResource(null)}
       />
 
-      {/* 3. Resource Learning Player Modal */}
+      {/* 3. Resource Learning Player Modal (Split View: Resource + StudyMatch AI Tutor) */}
       <ResourceViewerModal
         isOpen={viewerModalOpen}
+        topic={profile.topic || "Linear Regression"}
+        learnerProfile={profile}
         onClose={() => {
           setViewerModalOpen(false);
           handleResourceFinished();
+        }}
+        onDoubtEscalated={() => {
+          setPendingDoubtsCount((c) => c + 1);
         }}
       />
 

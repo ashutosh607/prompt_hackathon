@@ -11,7 +11,16 @@ import {
   X,
 } from "lucide-react";
 
-export default function Sidebar({ activeTab, onTabChange, profile, onOpenAuth, mobileOpen, onCloseMobile }) {
+export default function Sidebar({
+  activeTab,
+  onTabChange,
+  profile,
+  onOpenAuth,
+  mobileOpen,
+  onCloseMobile,
+  onOpenTeacherPortal,
+  pendingDoubtsCount = 0,
+}) {
   const navItems = [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
     { id: "mylearning", label: "My Learning", icon: BookOpen },
@@ -84,6 +93,31 @@ export default function Sidebar({ activeTab, onTabChange, profile, onOpenAuth, m
               );
             })}
           </nav>
+
+          {/* Teacher Portal Switcher */}
+          {onOpenTeacherPortal && (
+            <div className="pt-2">
+              <button
+                onClick={() => {
+                  onOpenTeacherPortal();
+                  if (onCloseMobile) onCloseMobile();
+                }}
+                className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-semibold bg-[#EAF3E8] border border-[#D0E3CD] text-[#1B3828] hover:bg-[#DEEDE0] transition cursor-pointer shadow-2xs"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 rounded-full bg-[#1B3828] text-white flex items-center justify-center text-[10px]">
+                    🎓
+                  </div>
+                  <span>Teacher Portal</span>
+                </div>
+                {pendingDoubtsCount > 0 && (
+                  <span className="w-5 h-5 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center animate-pulse">
+                    {pendingDoubtsCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Bottom Student Profile Card */}

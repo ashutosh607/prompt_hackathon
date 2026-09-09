@@ -10,6 +10,12 @@ const {
   saveQuest,
 } = require("../controllers/supabaseController");
 
+const {
+  askDoubt,
+  getPendingDoubts,
+  respondToDoubt,
+} = require("../controllers/doubtController");
+
 // Health check
 router.get("/health", checkHealth);
 
@@ -24,5 +30,10 @@ router.post("/diagnostics/evaluate", evaluateDiagnostic);
 // Personalized Resource Discovery & Quest Paths
 router.get("/resources/match/:topic", getMatchingResources);
 router.post("/quests/save", saveQuest);
+
+// StudyMatch AI Chatbot & Teacher Escalation APIs
+router.post("/doubts/ask", askDoubt);
+router.get("/doubts/pending", getPendingDoubts);
+router.post("/doubts/:id/respond", respondToDoubt);
 
 module.exports = router;
