@@ -15,6 +15,8 @@ import WhyThisModal from "./components/Dashboard/WhyThisModal";
 import FeedbackModal from "./components/Dashboard/FeedbackModal";
 import ResourceViewerModal from "./components/ResourceViewerModal";
 import TeacherDashboard from "./components/Teacher/TeacherDashboard";
+import PricingPage from "./components/Pricing/PricingPage";
+import TeacherSessionModal from "./components/TeacherSessionModal";
 import { socket } from "./lib/socket";
 import {
   DEFAULT_LEARNER_PROFILE,
@@ -29,13 +31,15 @@ import {
   Sparkles,
   ChevronLeft,
   GraduationCap,
+  Zap,
 } from "lucide-react";
 import { Button } from "./components/ui/button";
 
 export default function App() {
-  // Application Stage: 'landing' | 'onboarding' | 'quiz' | 'analysis' | 'dashboard' | 'teacher'
+  // Application Stage: 'landing' | 'onboarding' | 'quiz' | 'analysis' | 'dashboard' | 'teacher' | 'pricing'
   const [appStage, setAppStage] = useState("landing");
   const [pendingDoubtsCount, setPendingDoubtsCount] = useState(1);
+  const [teacherSessionModalOpen, setTeacherSessionModalOpen] = useState(false);
 
   // Dashboard Active Tab
   const [dashboardTab, setDashboardTab] = useState("overview");
@@ -199,25 +203,40 @@ export default function App() {
     }));
   };
 
+  // 7. Subscription Plan Change Handler
+  const handlePlanChange = (newPlan) => {
+    setProfile((prev) => ({
+      ...prev,
+      subscription: {
+        ...prev.subscription,
+        plan: newPlan,
+        aiQuestionsRemaining: newPlan === "FREE" ? 12 : newPlan === "PLUS" ? 84 : Infinity,
+        aiQuestionsTotal: newPlan === "FREE" ? 15 : newPlan === "PLUS" ? 100 : Infinity,
+        teacherSupport: newPlan !== "FREE",
+        videoSessions: newPlan === "PRO",
+      },
+    }));
+  };
+
   return (
-    <div className="min-h-screen bg-[#F9FAF7] text-[#1B3828] font-sans antialiased flex flex-col selection:bg-emerald-200">
+    <div className="min-h-screen bg-[#FDFEFC] text-[#1B3828] font-sans selection:bg-[#EAF3E8] selection:text-[#1B3828]">
       {/* ========================================================================= */}
-      {/* 1. LANDING PAGE (Preserved exactly as requested) */}
+      {/* 1. LANDING PAGE STAGE */}
       {/* ========================================================================= */}
       {appStage === "landing" && (
         <div className="min-h-screen flex flex-col justify-between">
-          {/* Top Header */}
-          <header className="w-full max-w-5xl mx-auto px-6 py-5 flex items-center justify-between">
-            <div className="flex items-center gap-2 select-none cursor-pointer">
-              <div className="w-8 h-8 rounded-full bg-[#EBF3E8] border border-[#D5E6D2] flex items-center justify-center text-[#2A5739]">
-                <Compass className="w-4 h-4" />
+          {/* Landing Header */}
+          <header className="px-6 py-5 max-w-5xl mx-auto w-full flex items-center justify-between border-b border-[#E3ECE1]">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-[#1B3828] text-white flex items-center justify-center shadow-sm">
+                <Compass className="w-4 h-4 text-emerald-300" />
               </div>
               <span className="font-bold text-lg text-[#1B3828] tracking-tight">
                 StudyMatch
               </span>
             </div>
 
-            <nav className="flex items-center gap-6">
+            <nav className="flex items-center gap-4 sm:gap-6">
               <button
                 onClick={() => setAppStage("onboarding")}
                 className="text-xs font-semibold text-stone-500 hover:text-stone-900 transition cursor-pointer hidden sm:inline-block"
@@ -231,11 +250,18 @@ export default function App() {
                 Dashboard Demo
               </button>
               <button
+                onClick={() => setAppStage("pricing")}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-stone-600 hover:text-stone-950 transition cursor-pointer"
+              >
+                <Zap className="w-3.5 h-3.5 text-emerald-700" />
+                <span>Plans</span>
+              </button>
+              <button
                 onClick={() => setAppStage("teacher")}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#EAF3E8] border border-[#D0E3CD] text-[#1B3828] hover:bg-[#DEEDE0] transition cursor-pointer shadow-2xs"
               >
                 <GraduationCap className="w-3.5 h-3.5 text-emerald-700" />
-                <span>Teacher Portal</span>
+                <span className="hidden sm:inline">Teacher Portal</span>
                 {pendingDoubtsCount > 0 && (
                   <span className="w-4 h-4 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center">
                     {pendingDoubtsCount}
@@ -386,6 +412,7 @@ export default function App() {
             onCloseMobile={() => setMobileSidebarOpen(false)}
             onOpenTeacherPortal={() => setAppStage("teacher")}
             pendingDoubtsCount={pendingDoubtsCount}
+            onOpenPricing={() => setAppStage("pricing")}
           />
 
           {/* Main Dashboard Panel */}
@@ -410,6 +437,17 @@ export default function App() {
               </div>
 
               <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setAppStage("pricing")}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#FAFBF9] border border-[#D5E1D2] text-[#1B3828] hover:bg-[#EEF4ED] transition cursor-pointer shadow-2xs"
+                >
+                  <Zap className="w-3.5 h-3.5 text-emerald-700" />
+                  <span className="hidden sm:inline">Plans</span>
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                    {profile?.subscription?.plan || "FREE"}
+                  </span>
+                </button>
+
                 <button
                   onClick={() => setAppStage("teacher")}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#EAF3E8] border border-[#D0E3CD] text-[#1B3828] hover:bg-[#DEEDE0] transition cursor-pointer shadow-2xs"
@@ -499,6 +537,17 @@ export default function App() {
         <TeacherDashboard onBackToStudent={() => setAppStage("dashboard")} />
       )}
 
+      {/* ========================================================================= */}
+      {/* 7. SUBSCRIPTION PRICING PAGE */}
+      {/* ========================================================================= */}
+      {appStage === "pricing" && (
+        <PricingPage
+          currentPlan={profile?.subscription?.plan || "FREE"}
+          onSelectPlan={(plan) => handlePlanChange(plan)}
+          onBack={() => setAppStage("dashboard")}
+        />
+      )}
+
       {/* Global Modals */}
       {/* 1. Supabase Authentication Modal */}
       <AuthModal
@@ -535,6 +584,13 @@ export default function App() {
         onDoubtEscalated={() => {
           setPendingDoubtsCount((c) => c + 1);
         }}
+        onOpenPricing={() => {
+          setViewerModalOpen(false);
+          setAppStage("pricing");
+        }}
+        onOpenTeacherSession={() => {
+          setTeacherSessionModalOpen(true);
+        }}
       />
 
       {/* 4. Adaptive Feedback Loop Modal */}
@@ -543,6 +599,12 @@ export default function App() {
         isOpen={Boolean(activeFeedbackResource)}
         onClose={() => setActiveFeedbackResource(null)}
         onSubmitFeedback={handleSubmitFeedback}
+      />
+
+      {/* 5. Future Video Call UI Modal (Pro Tier Preview) */}
+      <TeacherSessionModal
+        isOpen={teacherSessionModalOpen}
+        onClose={() => setTeacherSessionModalOpen(false)}
       />
     </div>
   );

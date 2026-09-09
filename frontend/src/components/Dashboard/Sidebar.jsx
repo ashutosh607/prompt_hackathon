@@ -9,6 +9,7 @@ import {
   User,
   Settings,
   X,
+  Zap,
 } from "lucide-react";
 
 export default function Sidebar({
@@ -20,6 +21,7 @@ export default function Sidebar({
   onCloseMobile,
   onOpenTeacherPortal,
   pendingDoubtsCount = 0,
+  onOpenPricing,
 }) {
   const navItems = [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
@@ -94,9 +96,30 @@ export default function Sidebar({
             })}
           </nav>
 
+          {/* Plans Navigation */}
+          {onOpenPricing && (
+            <div className="pt-2">
+              <button
+                onClick={() => {
+                  onOpenPricing();
+                  if (onCloseMobile) onCloseMobile();
+                }}
+                className="w-full flex items-center justify-between px-3.5 py-2 rounded-2xl text-xs font-semibold text-stone-700 hover:bg-[#EAF2E8] transition cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <Zap className="w-4 h-4 text-emerald-700" />
+                  <span>Plans & Upgrades</span>
+                </div>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#E5ECE3] text-[#1B3828]">
+                  {profile?.subscription?.plan || "FREE"}
+                </span>
+              </button>
+            </div>
+          )}
+
           {/* Teacher Portal Switcher */}
           {onOpenTeacherPortal && (
-            <div className="pt-2">
+            <div className="pt-1">
               <button
                 onClick={() => {
                   onOpenTeacherPortal();
@@ -123,16 +146,21 @@ export default function Sidebar({
         {/* Bottom Student Profile Card */}
         <div className="pt-4 border-t border-[#E2EAE0] flex items-center justify-between">
           <div
-            onClick={onOpenAuth}
+            onClick={onOpenPricing || onOpenAuth}
             className="flex items-center gap-2.5 cursor-pointer group"
           >
             <div className="w-9 h-9 rounded-full bg-[#E5EFE3] border border-[#CBDDC7] flex items-center justify-center text-[#1B3828] font-bold text-xs">
               {studentInitial}
             </div>
             <div>
-              <span className="text-xs font-bold text-[#1B3828] block group-hover:text-emerald-800 transition">
-                {studentName}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold text-[#1B3828] block group-hover:text-emerald-800 transition">
+                  {studentName}
+                </span>
+                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800">
+                  {profile?.subscription?.plan || "FREE"}
+                </span>
+              </div>
               <span className="text-[10px] text-stone-400 block font-mono">
                 {profile?.domain || "Machine Learning"}
               </span>

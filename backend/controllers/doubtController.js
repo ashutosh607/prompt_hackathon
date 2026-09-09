@@ -49,6 +49,8 @@ const askDoubt = async (req, res) => {
       return res.status(400).json({ success: false, message: "Question cannot be empty" });
     }
 
+    const studentPlan = learnerProfile.subscription?.plan || "FREE";
+
     // 1. Query existing ML model for learning action prediction
     const mlResult = await predictLearningAction(learnerProfile, topic);
 
@@ -64,43 +66,55 @@ const askDoubt = async (req, res) => {
 
     let createdDoubt = null;
 
-    // 3. If teacher intervention is necessary, escalate and notify via Socket.IO
+    // 3. If teacher intervention is necessary:
     if (decision.needs_teacher) {
-      createdDoubt = {
-        id: `doubt-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-        sessionId: sessionId || "default-session",
-        studentName: learnerProfile.name || studentName || "Student",
-        studentAvatar: (learnerProfile.name || studentName || "S").charAt(0).toUpperCase(),
-        topic: topic || "Linear Regression",
-        resourceTitle: resource.title || "Linear Regression Explained Visually",
-        resourceType: resource.type || "video",
-        question: question.trim(),
-        aiConfidence: decision.confidence,
-        escalationReason: decision.reason,
-        status: "WAITING_FOR_TEACHER",
-        timestamp: new Date().toISOString(),
-        mlContext: {
-          predictedAction: mlResult.predicted_action || "Build Concept",
-          confidence: mlResult.confidence || 0.72,
-          knowledgeGap: 100 - (learnerProfile.confidence || 72),
-          learningStyle: learnerProfile.style || "Visual",
-          guidance: mlResult.guidance,
-        },
-        conversation: [
-          ...conversationHistory,
-          { sender: "student", text: question.trim(), timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) },
-          { sender: "ai", text: "I don't want to give you a misleading explanation. This one needs a teacher's attention.", isEscalationNotice: true, timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) },
-        ],
-        teacherResponse: null,
-      };
+      if (studentPlan === "FREE") {
+        // For FREE users: Prompt upgrade to Plus instead of escalating to human teacher
+        decision.needs_upgrade = true;
+        decision.upgrade_prompt =
+          "Teacher help is available with Plus. AI can help with most doubts, but this one needs a teacher's attention.";
+      } else {
+        // For PLUS / PRO users: Automatically escalate to Teacher Dashboard
+        const priority = studentPlan === "PRO" ? "HIGH" : "NORMAL";
 
-      activeDoubts.unshift(createdDoubt);
+        createdDoubt = {
+          id: `doubt-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+          sessionId: sessionId || "default-session",
+          studentName: learnerProfile.name || studentName || "Student",
+          studentAvatar: (learnerProfile.name || studentName || "S").charAt(0).toUpperCase(),
+          studentPlan,
+          priority,
+          topic: topic || "Linear Regression",
+          resourceTitle: resource.title || "Linear Regression Explained Visually",
+          resourceType: resource.type || "video",
+          question: question.trim(),
+          aiConfidence: decision.confidence,
+          escalationReason: decision.reason,
+          status: "WAITING_FOR_TEACHER",
+          timestamp: new Date().toISOString(),
+          mlContext: {
+            predictedAction: mlResult.predicted_action || "Build Concept",
+            confidence: mlResult.confidence || 0.72,
+            knowledgeGap: 100 - (learnerProfile.confidence || 72),
+            learningStyle: learnerProfile.style || "Visual",
+            guidance: mlResult.guidance,
+          },
+          conversation: [
+            ...conversationHistory,
+            { sender: "student", text: question.trim(), timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) },
+            { sender: "ai", text: "I don't want to give you a misleading explanation. This one needs a teacher's attention.", isEscalationNotice: true, timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) },
+          ],
+          teacherResponse: null,
+        };
 
-      // Emit real-time Socket.IO notification to Teacher room
-      const io = req.app.get("io");
-      if (io) {
-        io.emit("doubt:escalated", createdDoubt);
-        console.log(`[Socket.IO] Dispatched doubt:escalated for doubt ${createdDoubt.id}`);
+        activeDoubts.unshift(createdDoubt);
+
+        // Emit real-time Socket.IO notification to Teacher room
+        const io = req.app.get("io");
+        if (io) {
+          io.emit("doubt:escalated", createdDoubt);
+          console.log(`[Socket.IO] Dispatched doubt:escalated (Priority: ${priority}) for doubt ${createdDoubt.id}`);
+        }
       }
     }
 

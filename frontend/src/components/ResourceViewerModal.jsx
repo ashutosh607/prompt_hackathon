@@ -11,6 +11,8 @@ export default function ResourceViewerModal({
   topic = "Linear Regression",
   learnerProfile = {},
   onDoubtEscalated,
+  onOpenPricing,
+  onOpenTeacherSession,
 }) {
   const [activeStep, setActiveStep] = useState(initialStep);
   const [quizAnswer, setQuizAnswer] = useState(null);
@@ -239,6 +241,8 @@ export default function ResourceViewerModal({
               }}
               learnerProfile={learnerProfile}
               onDoubtEscalated={onDoubtEscalated}
+              onOpenPricing={onOpenPricing}
+              onOpenTeacherSession={onOpenTeacherSession}
             />
           </div>
         </div>

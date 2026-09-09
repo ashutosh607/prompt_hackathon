@@ -11,6 +11,9 @@ import {
   MessageSquare,
   ChevronDown,
   Bot,
+  Zap,
+  Video,
+  ArrowRight,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { socket } from "../lib/socket";
@@ -20,7 +23,13 @@ export default function StudyMatchAITutor({
   resource = {},
   learnerProfile = {},
   onDoubtEscalated,
+  onOpenPricing,
+  onOpenTeacherSession,
 }) {
+  const plan = learnerProfile.subscription?.plan || "FREE";
+  const initialQuestions = learnerProfile.subscription?.aiQuestionsRemaining ?? 12;
+
+  const [questionsLeft, setQuestionsLeft] = useState(initialQuestions);
   const [messages, setMessages] = useState([
     {
       id: "initial-1",
@@ -73,6 +82,20 @@ export default function StudyMatchAITutor({
     const query = (queryText || inputQuery).trim();
     if (!query || isThinking) return;
 
+    // Check if free questions exhausted
+    if (plan === "FREE" && questionsLeft <= 0) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `limit-${Date.now()}`,
+          sender: "limit_warning",
+          text: "You've used your AI questions for this month. Keep learning without interruption with Plus.",
+          timestamp: "Just now",
+        },
+      ]);
+      return;
+    }
+
     const userMessageId = `msg-student-${Date.now()}`;
     const userMsg = {
       id: userMessageId,
@@ -84,6 +107,10 @@ export default function StudyMatchAITutor({
     setMessages((prev) => [...prev, userMsg]);
     setInputQuery("");
     setIsThinking(true);
+
+    if (plan === "FREE") {
+      setQuestionsLeft((prev) => Math.max(0, prev - 1));
+    }
 
     try {
       const response = await fetch("http://localhost:5000/api/doubts/ask", {
@@ -102,6 +129,9 @@ export default function StudyMatchAITutor({
             style: learnerProfile.style || "Visual",
             confidence: learnerProfile.confidence || 72,
             stats: learnerProfile.stats,
+            subscription: {
+              plan,
+            },
           },
           conversationHistory: messages.map((m) => ({
             sender: m.sender,
@@ -129,13 +159,25 @@ export default function StudyMatchAITutor({
               timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
             },
           ]);
+        } else if (analysis.needs_upgrade) {
+          // FREE User: Prompt upgrade to Plus instead of escalating
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `upgrade-card-${Date.now()}`,
+              sender: "upgrade_card",
+              doubtText: query,
+              timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            },
+          ]);
         } else {
-          // AI decides human teacher intervention is necessary (anti-hallucination USP)
+          // PLUS / PRO User: Escalate directly to human faculty
           const newDoubt = data.doubt || {
             id: `doubt-local-${Date.now()}`,
             topic: topic || "Linear Regression",
             resourceTitle: resource.title || "Linear Regression Explained Visually",
             status: "WAITING_FOR_TEACHER",
+            priority: plan === "PRO" ? "HIGH" : "NORMAL",
             reason: analysis.reason,
             confidence: analysis.confidence,
             mlContext: analysis.ml_context,
@@ -156,6 +198,7 @@ export default function StudyMatchAITutor({
               id: `ai-escalate-card-${Date.now()}`,
               sender: "escalation_card",
               doubt: newDoubt,
+              isPro: plan === "PRO",
               timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
             },
           ]);
@@ -188,9 +231,12 @@ export default function StudyMatchAITutor({
   };
 
   const quickQuestions = [
-    { text: "Why is the slope negative here?", label: "Negative slope" },
+    { text: "Why is the slope negative here?", label: "Negative slope (AI Resolves)" },
     { text: "How does Ordinary Least Squares work?", label: "Least squares intuition" },
-    { text: "Why does the slope change when this point is removed?", label: "Outlier point (Escalates to Teacher)" },
+    {
+      text: "Why does the slope change when this point is removed?",
+      label: plan === "FREE" ? "Outlier (Requires Plus)" : "Outlier point (Escalates to Teacher)",
+    },
   ];
 
   return (
@@ -208,16 +254,28 @@ export default function StudyMatchAITutor({
                 <Sparkles className="w-2.5 h-2.5 mr-0.5 text-emerald-600" /> ML Active
               </span>
             </div>
-            <p className="text-[11px] text-stone-500 truncate max-w-[200px]">
-              {resource.title || "Learning Companion"}
-            </p>
+            {/* Subscription status indicator */}
+            <div className="flex items-center gap-1.5 text-[10px] text-stone-500">
+              <span className="font-bold text-stone-700">{plan} Plan</span>
+              <span>•</span>
+              {plan === "FREE" ? (
+                <span className="text-amber-800 font-semibold">{questionsLeft} AI questions left</span>
+              ) : plan === "PLUS" ? (
+                <span className="text-emerald-700 font-semibold">Teacher Chat Active</span>
+              ) : (
+                <span className="text-emerald-800 font-bold">⚡ Priority + Video Pro</span>
+              )}
+            </div>
           </div>
         </div>
 
-        {activeDoubt && activeDoubt.status === "WAITING_FOR_TEACHER" && (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-900 border border-amber-200 animate-pulse">
-            <Clock className="w-3 h-3" /> Teacher Escalated
-          </span>
+        {plan === "FREE" && onOpenPricing && (
+          <button
+            onClick={onOpenPricing}
+            className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#1B3828] text-white hover:bg-[#122A1D] transition cursor-pointer shadow-2xs flex items-center gap-1"
+          >
+            Upgrade
+          </button>
         )}
       </div>
 
@@ -256,14 +314,77 @@ export default function StudyMatchAITutor({
             );
           }
 
+          // Upgrade Prompt Card for FREE Users when AI encounters unresolvable doubt
+          if (msg.sender === "upgrade_card") {
+            return (
+              <div key={msg.id} className="p-4 rounded-2xl bg-[#FFFDF5] border border-[#F0E0AA] shadow-sm space-y-3 text-xs text-[#523B08]">
+                <div className="flex items-center gap-2 text-amber-900 font-bold">
+                  <AlertCircle className="w-4 h-4 text-amber-700 shrink-0" />
+                  <span>Teacher help is available with Plus.</span>
+                </div>
+                <p className="text-[11px] text-[#69501B] leading-relaxed">
+                  AI can help with most doubts, but this one needs a teacher&apos;s attention.
+                </p>
+
+                <div className="p-2.5 bg-white/90 rounded-xl border border-[#EDE0B2] text-[11px] space-y-1">
+                  <span className="text-stone-500 block">Why upgrade to Plus?</span>
+                  <ul className="text-stone-700 space-y-1 list-disc list-inside">
+                    <li>Direct teacher doubt chat</li>
+                    <li>Automatic faculty escalation without guessing</li>
+                    <li>100 monthly AI questions</li>
+                  </ul>
+                </div>
+
+                <Button
+                  onClick={onOpenPricing}
+                  className="w-full bg-[#1B3828] hover:bg-[#122A1D] text-white rounded-full py-2 text-xs font-semibold cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
+                  Upgrade to Plus
+                </Button>
+              </div>
+            );
+          }
+
+          // Limit Exhausted Notification Card
+          if (msg.sender === "limit_warning") {
+            return (
+              <div key={msg.id} className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-2">
+                <div className="font-bold flex items-center gap-1.5">
+                  <AlertCircle className="w-4 h-4 text-amber-700" />
+                  <span>AI Limit Reached</span>
+                </div>
+                <p className="text-[11px] text-amber-800">
+                  {msg.text}
+                </p>
+                <Button
+                  onClick={onOpenPricing}
+                  className="bg-[#1B3828] hover:bg-[#122A1D] text-white rounded-full py-1.5 px-4 text-xs font-semibold cursor-pointer shadow-2xs"
+                >
+                  Upgrade to Plus →
+                </Button>
+              </div>
+            );
+          }
+
           if (msg.sender === "escalation_card") {
             const doubt = msg.doubt || {};
+            const isPro = msg.isPro;
+
             return (
               <div key={msg.id} className="p-3.5 rounded-2xl bg-[#FFFDF5] border border-[#F3E6BA] shadow-sm space-y-2.5 text-xs text-[#523B08]">
-                <div className="flex items-center gap-2 text-amber-800 font-bold">
-                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-                  <span>Teacher help requested</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-amber-800 font-bold">
+                    <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>Teacher help requested</span>
+                  </div>
+                  {isPro && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
+                      ⚡ Priority Pro
+                    </span>
+                  )}
                 </div>
+
                 <p className="text-[11px] text-[#69501B]">
                   I&apos;ve sent this doubt to your teacher so you get an accurate, verified explanation without guesswork.
                 </p>
@@ -286,6 +407,18 @@ export default function StudyMatchAITutor({
                     </span>
                   </div>
                 </div>
+
+                {/* For PRO Users: Book a live 1-on-1 teacher session */}
+                {isPro && onOpenTeacherSession && (
+                  <Button
+                    onClick={onOpenTeacherSession}
+                    variant="outline"
+                    className="w-full rounded-full py-1.5 text-[11px] font-semibold border-amber-300 text-amber-900 hover:bg-amber-100/60 flex items-center justify-center gap-1.5 cursor-pointer mt-1"
+                  >
+                    <Video className="w-3.5 h-3.5 text-amber-700" />
+                    Book a Teacher 1-on-1 Session
+                  </Button>
+                )}
 
                 <p className="text-[10px] text-stone-500 italic">
                   Feel free to continue watching or reading—your teacher&apos;s answer will pop up right here in this chat!
@@ -343,9 +476,14 @@ export default function StudyMatchAITutor({
 
       {/* Suggested Quick Doubt Chips */}
       <div className="px-3 py-2 bg-[#F3F7F2] border-t border-[#E3EBE0]">
-        <div className="text-[10px] font-bold text-stone-500 mb-1.5 flex items-center gap-1">
-          <Sparkles className="w-3 h-3 text-emerald-600" />
-          <span>Suggested Questions:</span>
+        <div className="text-[10px] font-bold text-stone-500 mb-1.5 flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            <Sparkles className="w-3 h-3 text-emerald-600" />
+            <span>Suggested Questions:</span>
+          </div>
+          <span className="text-[9px] text-stone-400">
+            {plan === "FREE" ? `${questionsLeft} left` : "Active"}
+          </span>
         </div>
         <div className="flex flex-col gap-1.5">
           {quickQuestions.map((q, idx) => (
@@ -374,21 +512,33 @@ export default function StudyMatchAITutor({
             type="text"
             value={inputQuery}
             onChange={(e) => setInputQuery(e.target.value)}
-            placeholder="Ask anything about this resource..."
-            disabled={isThinking}
-            className="flex-1 bg-[#F5F8F4] border border-[#D8E4D5] focus:border-[#1B3828] focus:bg-white rounded-full px-3.5 py-2 text-xs text-[#1B3828] placeholder-stone-400 outline-none transition"
+            placeholder={
+              plan === "FREE" && questionsLeft <= 0
+                ? "Monthly AI questions used up"
+                : "Ask anything about this resource..."
+            }
+            disabled={isThinking || (plan === "FREE" && questionsLeft <= 0)}
+            className="flex-1 bg-[#F5F8F4] border border-[#D8E4D5] focus:border-[#1B3828] focus:bg-white rounded-full px-3.5 py-2 text-xs text-[#1B3828] placeholder-stone-400 outline-none transition disabled:opacity-50"
           />
           <Button
             type="submit"
-            disabled={!inputQuery.trim() || isThinking}
+            disabled={!inputQuery.trim() || isThinking || (plan === "FREE" && questionsLeft <= 0)}
             className="w-8 h-8 rounded-full bg-[#1B3828] hover:bg-[#132A1D] text-white p-0 flex items-center justify-center shrink-0 disabled:opacity-40 transition cursor-pointer"
           >
             <Send className="w-3.5 h-3.5" />
           </Button>
         </form>
-        <p className="text-[9px] text-stone-400 text-center mt-1.5">
-          ML Guided • Unsure questions auto-escalate to your teacher
-        </p>
+        <div className="flex items-center justify-between text-[9px] text-stone-400 mt-1.5 px-1">
+          <span>ML Guided • {plan} Tier</span>
+          {onOpenPricing && (
+            <button
+              onClick={onOpenPricing}
+              className="text-emerald-800 font-semibold hover:underline cursor-pointer"
+            >
+              View Plans →
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

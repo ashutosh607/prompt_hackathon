@@ -186,9 +186,20 @@ export default function TeacherDashboard({ onBackToStudent }) {
                   className="bg-white border-2 border-amber-200 rounded-3xl p-5 shadow-sm hover:shadow-md transition space-y-3 relative overflow-hidden"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-200 uppercase tracking-wide">
-                      <Clock className="w-2.5 h-2.5" /> New Doubt
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-200 uppercase tracking-wide">
+                        <Clock className="w-2.5 h-2.5" /> New Doubt
+                      </span>
+                      {doubt.priority === "HIGH" ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 uppercase">
+                          ⚡ High Priority (Pro)
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#EAF3E8] text-[#204930] border border-[#CFE4CD] uppercase">
+                          Plus Plan
+                        </span>
+                      )}
+                    </div>
                     <span className="text-[11px] text-stone-500 font-medium">
                       {doubt.topic}
                     </span>
