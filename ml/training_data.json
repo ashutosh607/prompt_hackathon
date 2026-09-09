@@ -1,0 +1,92 @@
+[
+  {
+    "session_id": "sess_101",
+    "topic": "ML Fundamentals",
+    "q1_score": 1,
+    "q2_score": 1,
+    "q3_score": 1,
+    "time_taken_sec": 42,
+    "target_level": "advanced"
+  },
+  {
+    "session_id": "sess_102",
+    "topic": "React",
+    "q1_score": 1,
+    "q2_score": 1,
+    "q3_score": 0,
+    "time_taken_sec": 65,
+    "target_level": "intermediate"
+  },
+  {
+    "session_id": "sess_103",
+    "topic": "Linear Regression",
+    "q1_score": 1,
+    "q2_score": 0,
+    "q3_score": 1,
+    "time_taken_sec": 78,
+    "target_level": "intermediate"
+  },
+  {
+    "session_id": "sess_104",
+    "topic": "SQL/Databases",
+    "q1_score": 1,
+    "q2_score": 0,
+    "q3_score": 0,
+    "time_taken_sec": 85,
+    "target_level": "beginner"
+  },
+  {
+    "session_id": "sess_105",
+    "topic": "JavaScript",
+    "q1_score": 0,
+    "q2_score": 1,
+    "q3_score": 0,
+    "time_taken_sec": 95,
+    "target_level": "beginner"
+  },
+  {
+    "session_id": "sess_106",
+    "topic": "Data Preprocessing",
+    "q1_score": 0,
+    "q2_score": 0,
+    "q3_score": 0,
+    "time_taken_sec": 115,
+    "target_level": "beginner"
+  },
+  {
+    "session_id": "sess_107",
+    "topic": "Overfitting & Underfitting",
+    "q1_score": 1,
+    "q2_score": 1,
+    "q3_score": 1,
+    "time_taken_sec": 38,
+    "target_level": "advanced"
+  },
+  {
+    "session_id": "sess_108",
+    "topic": "REST APIs",
+    "q1_score": 0,
+    "q2_score": 1,
+    "q3_score": 1,
+    "time_taken_sec": 88,
+    "target_level": "intermediate"
+  },
+  {
+    "session_id": "sess_109",
+    "topic": "Decision Trees",
+    "q1_score": 1,
+    "q2_score": 0,
+    "q3_score": 0,
+    "time_taken_sec": 62,
+    "target_level": "beginner"
+  },
+  {
+    "session_id": "sess_110",
+    "topic": "EDA",
+    "q1_score": 1,
+    "q2_score": 1,
+    "q3_score": 0,
+    "time_taken_sec": 55,
+    "target_level": "intermediate"
+  }
+]
