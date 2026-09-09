@@ -2,15 +2,27 @@ const express = require("express");
 const router = express.Router();
 const {
   checkHealth,
-  getItems,
-  createItem,
+  getTopics,
+  getSkillMap,
+  getDiagnosticQuestions,
+  evaluateDiagnostic,
+  getMatchingResources,
+  saveQuest,
 } = require("../controllers/supabaseController");
 
-// System and Supabase health check
+// Health check
 router.get("/health", checkHealth);
 
-// Sample database CRUD routes using Supabase
-router.get("/items", getItems);
-router.post("/items", createItem);
+// StudyMatch Topic and Skill Map APIs
+router.get("/topics", getTopics);
+router.get("/topics/:topic/skillmap", getSkillMap);
+
+// Diagnostic Questions & Scoring
+router.get("/diagnostics/:topic", getDiagnosticQuestions);
+router.post("/diagnostics/evaluate", evaluateDiagnostic);
+
+// Personalized Resource Discovery & Quest Paths
+router.get("/resources/match/:topic", getMatchingResources);
+router.post("/quests/save", saveQuest);
 
 module.exports = router;
